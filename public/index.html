@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YouTube Converter</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #ff0000 0%, #cc0000 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            width: 100%;
+            max-width: 500px;
+            text-align: center;
+        }
+        
+        .logo {
+            font-size: 2.5rem;
+            color: #ff0000;
+            margin-bottom: 10px;
+        }
+        
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+        
+        .url-input {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            margin-bottom: 20px;
+            transition: border-color 0.3s;
+        }
+        
+        .url-input:focus {
+            border-color: #ff0000;
+            outline: none;
+        }
+        
+        .format-selector {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .format-btn {
+            flex: 1;
+            padding: 12px;
+            border: 2px solid #ddd;
+            background: white;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+        
+        .format-btn.active {
+            background: #ff0000;
+            color: white;
+            border-color: #ff0000;
+        }
+        
+        .convert-btn {
+            width: 100%;
+            padding: 15px;
+            background: #ff0000;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        
+        .convert-btn:hover {
+            background: #cc0000;
+        }
+        
+        .convert-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        
+        .status {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 8px;
+            display: none;
+        }
+        
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            display: block;
+        }
+        
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            display: block;
+        }
+        
+        .status.processing {
+            background: #cce7ff;
+            color: #004085;
+            display: block;
+        }
+        
+        .download-btn {
+            display: block;
+            width: 100%;
+            padding: 15px;
+            background: #28a745;
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            margin-top: 15px;
+            font-weight: 600;
+            display: none;
+        }
+        
+        .info {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            font-size: 14px;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo">
+            <i class="fab fa-youtube">🎵</i>
+        </div>
+        <h1>YouTube Dönüştürücü</h1>
+        
+        <input type="text" class="url-input" id="videoUrl" 
+               placeholder="YouTube video URL'sini yapıştır...">
+        
+        <div class="format-selector">
+            <button class="format-btn active" data-format="mp4">MP4 Video</button>
+            <button class="format-btn" data-format="mp3">MP3 Ses</button>
+        </div>
+        
+        <button class="convert-btn" id="convertBtn">
+            🎵 Dönüştür
+        </button>
+        
+        <div class="status" id="status"></div>
+        
+        <a href="#" class="download-btn" id="downloadBtn">
+            📥 İndir
+        </a>
+        
+        <div class="info">
+            <strong>Nasıl Kullanılır:</strong><br>
+            1. YouTube video linkini kopyala<br>
+            2. Buraya yapıştır<br>
+            3. Formatı seç ve dönüştür!
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const videoUrlInput = document.getElementById('videoUrl');
+            const convertBtn = document.getElementById('convertBtn');
+            const statusDiv = document.getElementById('status');
+            const downloadBtn = document.getElementById('downloadBtn');
+            const formatBtns = document.querySelectorAll('.format-btn');
+            
+            let selectedFormat = 'mp4';
+            
+            // Format seçimi
+            formatBtns.forEach(btn => {
+                btn.addEventListener('click', function() {
+                    formatBtns.forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                    selectedFormat = this.getAttribute('data-format');
+                });
+            });
+            
+            // Dönüştürme butonu
+            convertBtn.addEventListener('click', async function() {
+                const url = videoUrlInput.value.trim();
+                
+                if (!url) {
+                    showStatus('Lütfen bir YouTube URL\'si girin!', 'error');
+                    return;
+                }
+                
+                if (!isValidYouTubeUrl(url)) {
+                    showStatus('Geçerli bir YouTube URL\'si girin!', 'error');
+                    return;
+                }
+                
+                try {
+                    showStatus('Video bilgileri alınıyor...', 'processing');
+                    convertBtn.disabled = true;
+                    
+                    // Video bilgilerini simüle et
+                    const videoId = extractVideoId(url);
+                    const videoInfo = await getVideoInfo(videoId);
+                    
+                    showStatus('Dönüştürme başlıyor...', 'processing');
+                    
+                    // Dönüşümü simüle et
+                    setTimeout(() => {
+                        showStatus(`✅ Dönüşüm tamamlandı! ${selectedFormat.toUpperCase()} hazır.`, 'success');
+                        downloadBtn.style.display = 'block';
+                        downloadBtn.onclick = function() {
+                            alert(`Demo: Gerçek uygulamada ${videoInfo.title} adlı video indirilirdi.`);
+                            return false;
+                        };
+                        convertBtn.disabled = false;
+                    }, 2000);
+                    
+                } catch (error) {
+                    showStatus('Hata: ' + error.message, 'error');
+                    convertBtn.disabled = false;
+                }
+            });
+            
+            // YouTube URL doğrulama
+            function isValidYouTubeUrl(url) {
+                return url.includes('youtube.com/watch?v=') || url.includes('youtu.be/');
+            }
+            
+            // Video ID çıkarma
+            function extractVideoId(url) {
+                const match = url.match(/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/);
+                return match ? match[1] : null;
+            }
+            
+            // Video bilgilerini simüle et
+            async function getVideoInfo(videoId) {
+                // Gerçek uygulamada YouTube API kullanılır
+                return new Promise((resolve) => {
+                    setTimeout(() => {
+                        resolve({
+                            title: `YouTube Video (${videoId})`,
+                            duration: '3:45',
+                            quality: '720p'
+                        });
+                    }, 1000);
+                });
+            }
+            
+            // Durum mesajı göster
+            function showStatus(message, type) {
+                statusDiv.textContent = message;
+                statusDiv.className = 'status ' + type;
+            }
+            
+            // Örnek URL placeholder'ı
+            videoUrlInput.placeholder = 'Örnek: https://www.youtube.com/watch?v=dQw4w9WgXcQ';
+        });
+    </script>
+</body>
+</html>
