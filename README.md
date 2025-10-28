@@ -52,6 +52,6 @@ Bu proje:
 
 --- 
 
-*Son güncelleme: $(date)*
+*Son güncelleme: 28 Ekim 2025
 
 *"Bilgi paylaştıkça çoğalır, ancak her zaman etik ve yasal sınırlar içinde kalmalıdır."*
